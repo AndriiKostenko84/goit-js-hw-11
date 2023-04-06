@@ -31,7 +31,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-image: linear-gradient(to top, rgba(234, 95, 3, 0.5), rgba(112, 210, 8, 0.3));to;
+    background-image: linear-gradient(to top, rgba(234, 95, 3, 0.5), rgba(112, 210, 8, 0.3));
     margin-bottom: 15px;
     z-index: 100;
 }
@@ -121,7 +121,7 @@ body {
     font-size: 16px;
     font-weight: 700;
     line-height: 1;
-    color: #1020af;
+    color: rgb(239, 243, 238);
     width: 30%;
     height: 25px;
     margin-top: 15px;
@@ -135,9 +135,9 @@ body {
 }
 
 .autoload_text {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 500;
     line-height: 1;
-    color: #fffb00;
+    color: rgb(27, 31, 234);
     margin-left: 15px;
 }
