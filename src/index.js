@@ -6,9 +6,9 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 
 
 const galleryLightBox = new SimpleLightbox(`.gallery a`);
-const pixabayAPI = new PixabayAPI();
+const pixabayApi = new pixabayApi();
 
-const perPage = pixabayAPI.perPage;
+const perPage = pixabayApi.perPage;
 
 const formEl = document.querySelector(`#search-form`);
 const galleryEl = document.querySelector(`.gallery`);
@@ -21,24 +21,24 @@ loadMoreEl.addEventListener(`click`, handleLoadMoreEls);
 async function handleSearchPhotos(e) {
     e.preventDefault();
 
-    pixabayAPI.q = e.target.elements.searchQuery.value.trim();
+    pixabayApi.q = e.target.elements.searchQuery.value.trim();
 
-    if (!pixabayAPI.q) {
+    if (!pixabayApi.q) {
         Notiflix.Notify.warning(`The field cannot be empty. Please enter a search query`);
         return
     }
     
     SearchEl.classList.add(`search-fixed`)
-    pixabayAPI.page = 1;
+    pixabayApi.page = 1;
 
     try {
-        const { data } = await pixabayAPI.fetchPhotos();         
+        const { data } = await pixabayApi.fetchPhotos();         
         const totalPage = Math.ceil(data.totalHits / perPage);
         if (!data.hits.length) {
             galleryEl.innerHTML = '';
             throw new Error()
 
-        } else if (totalPage === pixabayAPI.page) {
+        } else if (totalPage === pixabayApi.page) {
             Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`)
             galleryEl.innerHTML = renderingGallery(data.hits);
             galleryLightBox.refresh();
@@ -60,12 +60,12 @@ async function handleSearchPhotos(e) {
 
 async function handleLoadMoreEls(e) {
 
-    pixabayAPI.page += 1;
+    pixabayApi.page += 1;
 
     try {
-        const { data } = await pixabayAPI.fetchPhotos();
+        const { data } = await pixabayApi.fetchPhotos();
         const totalPage = Math.ceil(data.totalHits / perPage);
-        if (totalPage === pixabayAPI.page) {
+        if (totalPage === pixabayApi.page) {
             galleryEl.insertAdjacentHTML(`beforeend`, renderingGallery(data.hits));
             loadMoreEl.classList.add("is-hiden");
             throw new Error();

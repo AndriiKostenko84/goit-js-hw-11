@@ -4,7 +4,7 @@ export class PixabayApi {
     #BASE_URL = `https://pixabay.com/api/`;
     #API_KEY = `35096512-11f13dd84508435723f25f595 `;
     
-    #BASE_SEARCH_PARAMS = {
+    #SEARCH_PARAMS = {
         image_type: `photo`,
         orientation: `horizontal`,
         safesearch: `true`,
@@ -12,7 +12,7 @@ export class PixabayApi {
     }
 
     get perPage() {
-        return this.#BASE_SEARCH_PARAMS.per_page;
+        return this.#SEARCH_PARAMS.per_page;
     }
 
     q = null;
@@ -22,7 +22,7 @@ export class PixabayApi {
         return axios.get(`${this.#BASE_URL}?key=${this.#API_KEY}&`,{
             params: {
                 q: this.q,
-                ...this.#BASE_SEARCH_PARAMS,
+                ...this.#SEARCH_PARAMS,
                 page: this.page,
         },
     });
