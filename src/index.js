@@ -1,122 +1,113 @@
-import styles from './css/styles.css';
 import Notiflix from 'notiflix';
 import { PixabayApi } from './fetchPhoto';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
-import throttle from 'lodash.throttle';
 
 
-const formEl = document.querySelector('.search-form');
-const gallaryDiv = document.querySelector('.gallery');
-const loadMoreBtn = document.querySelector('.load-more');
-const bodyEl = document.querySelector('body');
-const checkEl = document.querySelector('.autoload_check');
 
+const galleryLightBox = new SimpleLightbox(`.gallery a`);
+const pixabayAPI = new PixabayAPI();
 
-const pixabayApi = new PixabayApi();
-let inputValue = '';
-let gallery = new simpleLightbox('.gallery a', {
-    captionsData: "title"
-});
+const perPage = pixabayAPI.perPage;
 
-const formListener = formEl.addEventListener('submit', onFormSubmit)
-const loadMoreListener = loadMoreBtn.addEventListener('click', onLoadMore)
+const formEl = document.querySelector(`#search-form`);
+const galleryEl = document.querySelector(`.gallery`);
+const loadMoreEl = document.querySelector(`.load-more`);
+const SearchEl = document.querySelector(`.search`);
 
-async function onFormSubmit(ev) {
-    ev.preventDefault();
-    gallaryDiv.innerHTML = '';
-    inputValue = ev.currentTarget.elements[0].value;
-    loadMoreBtn.style.display = `none`;
+formEl.addEventListener(`submit`, handleSearchPhotos);
+loadMoreEl.addEventListener(`click`, handleLoadMoreEls);
 
-    window.removeEventListener("scroll", throtledhandleInfiniteScroll);
+async function handleSearchPhotos(e) {
+    e.preventDefault();
 
-    if (!inputValue.trim()) {
-        Notiflix.Notify.warning(`Enter some request to get started`)
-        loadMoreBtn.style.display = `none`;
+    pixabayAPI.q = e.target.elements.searchQuery.value.trim();
+
+    if (!pixabayAPI.q) {
+        Notiflix.Notify.warning(`The field cannot be empty. Please enter a search query`);
         return
     }
+    
+    SearchEl.classList.add(`search-fixed`)
+    pixabayAPI.page = 1;
 
-    const request = await createGallary(inputValue, 1);
+    try {
+        const { data } = await pixabayAPI.fetchPhotos();         
+        const totalPage = Math.ceil(data.totalHits / perPage);
+        if (!data.hits.length) {
+            galleryEl.innerHTML = '';
+            throw new Error()
 
-    if (!request.data.totalHits) {
-        Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
-        formEl.reset();
-        loadMoreBtn.style.display = `none`;
-        return
-    }
-
-    Notiflix.Notify.success(`Hooray! We found ${request.data.totalHits} images.`);
-
-    if (request.data.totalHits > 40) {
-        if (checkEl.checked) {
-            let scrollListener = window.addEventListener("scroll", throtledhandleInfiniteScroll);
-            formEl.reset();
+        } else if (totalPage === pixabayAPI.page) {
+            Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`)
+            galleryEl.innerHTML = renderingGallery(data.hits);
+            galleryLightBox.refresh();
+            loadMoreEl.classList.add("is-hiden");
             return
         }
-        loadMoreBtn.style.display = `block`;
-        formEl.reset();
-        return
+    
+        Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images`)
+        galleryEl.innerHTML = renderingGallery(data.hits);
+        loadMoreEl.classList.remove("is-hiden")
+        galleryLightBox.refresh();
     }
-    formEl.reset();
-};
 
-
-async function createGallary(searchRequest, page) {
-    pixabayApi.searchValue = searchRequest;
-    pixabayApi.currentPage = page;
-    let ApiRes;
-    try {
-        ApiRes = await pixabayApi.getPhoto();
-        const markup = ApiRes.data.hits.map(({ webformatURL, largeImageURL, tags, likes, views, comments, downloads, id }) => `
-        <a rel="noopener noreferrer" class="gallery__link" href="${largeImageURL}">
-                <img class="gallery__image" src="${webformatURL}" data-source="${largeImageURL}" alt="${tags}" loading="lazy" />
-            <div class="info">
-                <p class="info-item"><b>Likes: ${likes}</b></p>
-                <p class="info-item"><b>Views: ${views}</b></p>
-                <p class="info-item"><b>Comments: ${comments}</b></p>
-                <p class="info-item"><b>Downloads: ${downloads}</b></p>
-            </div>
-        </a>
-        `);
-        await gallaryDiv.insertAdjacentHTML('beforeEnd', markup.join(""));
-
-    } catch (error) {
-        console.log(error)
-    }
-    gallery.refresh();
-    return ApiRes;
+        catch (error) {
+        loadMoreEl.classList.add("is-hiden");
+        Notiflix.Notify.failure(`Sorry, there are no images matching your search query. Please try again`);
+    };
 }
 
-async function onLoadMore(el) {
-    ++pixabayApi.currentPage
-    const request = await createGallary(inputValue, pixabayApi.currentPage);
-    if (!request.data.hits.length) {
-        loadMoreBtn.style.display = `none`;
-        Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.")
-        return
-    }
+async function handleLoadMoreEls(e) {
 
-    const { height: cardHeight } = gallaryDiv.firstElementChild.getBoundingClientRect();
+    pixabayAPI.page += 1;
 
-    window.scrollBy({
+    try {
+        const { data } = await pixabayAPI.fetchPhotos();
+        const totalPage = Math.ceil(data.totalHits / perPage);
+        if (totalPage === pixabayAPI.page) {
+            galleryEl.insertAdjacentHTML(`beforeend`, renderingGallery(data.hits));
+            loadMoreEl.classList.add("is-hiden");
+            throw new Error();
+        }
+        
+        galleryEl.insertAdjacentHTML(`beforeend`, renderingGallery(data.hits));
+        galleryLightBox.refresh();
+
+        const { height: cardHeight } = document
+        .querySelector(".gallery")
+        .firstElementChild.getBoundingClientRect();
+
+        window.scrollBy({
         top: cardHeight * 2,
         behavior: "smooth",
-    });
-
+});
+        
+    } catch (error) {
+        Notiflix.Notify.failure(`We're sorry, but you've reached the end of search results`);
+    }
 }
 
-const handleInfiniteScroll = async () => {
-    const endOfPage = window.innerHeight + window.pageYOffset >= document.body.offsetHeight;
-    if (endOfPage) {
-        ++pixabayApi.currentPage;
-        const request = await createGallary(inputValue, pixabayApi.currentPage);
-        if (!request.data.hits.length) {
-            loadMoreBtn.style.display = `none`;
-            Notiflix.Notify.failure("We're sorry, but you've reached the end of search results.");
-            window.removeEventListener("scroll", throtledhandleInfiniteScroll);
-            return
-        }
-    }
-};
-
-const throtledhandleInfiniteScroll = throttle(handleInfiniteScroll, 200);
+function renderingGallery(img) {
+    return img.map(({ webformatURL, tags, likes, views, comments, downloads, largeImageURL, }) => `
+    <a class="gallery__link" href="${largeImageURL}">
+        <div class="photo-card">
+            <img src="${webformatURL}" "alt="${tags}" loading="lazy" class="gallery__image"/>
+        
+        <div class="info">
+            <p class="info-item">
+                <b class="info-item__statistic"> ${likes}</b>
+            </p>
+            <p class="info-item">
+                <b class="info-item__statistic"> ${views}</b>
+            </p>
+            <p class="info-item">
+                <b class="info-item__statistic"> ${comments}</b>
+            </p>
+            <p class="info-item">
+                <b class="info-item__statistic"> ${downloads}</b>
+            </p>
+        </div>
+        </div>
+    </a>`).join('');
+}

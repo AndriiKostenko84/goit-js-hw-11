@@ -1,16 +1,30 @@
 import axios from "axios";
 
 export class PixabayApi {
-    #API_KEY = `35096512-11f13dd84508435723f25f595`;
     #BASE_URL = `https://pixabay.com/api/`;
-    #SEARCH_TYPE = `photo`;
-    #SAFE_SEARCH = true;
-    currentPage = 1;
-    perPage = 40;
-    searchValue = ``;
+    #API_KEY = `35096512-11f13dd84508435723f25f595 `;
+    
+    #BASE_SEARCH_PARAMS = {
+        image_type: `photo`,
+        orientation: `horizontal`,
+        safesearch: `true`,
+        per_page: 40,
+    }
 
+    get perPage() {
+        return this.#BASE_SEARCH_PARAMS.per_page;
+    }
 
-    getPhoto = () => axios.get(`${this.#BASE_URL}?key=${this.#API_KEY}&q=${this.searchValue}&image_type=${this.#SEARCH_TYPE}&page=${this.currentPage}&per_page=${this.perPage}&orientation=horizontal&safesearch=${this.#SAFE_SEARCH}`);
-    getByID = (id) => axios.get(`${this.#BASE_URL}?key=${this.#API_KEY}&id=${id}&image_type=${this.#SEARCH_TYPE}`);
-
+    q = null;
+    page = 1;
+    
+    fetchPhotos() {
+        return axios.get(`${this.#BASE_URL}?key=${this.#API_KEY}&`,{
+            params: {
+                q: this.q,
+                ...this.#BASE_SEARCH_PARAMS,
+                page: this.page,
+        },
+    });
+    }
 }
