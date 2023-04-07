@@ -1,12 +1,12 @@
 import Notiflix from 'notiflix';
-import { pixabayApi } from './fetchPhoto';
+import { PixabayApi } from './fetchPhoto';
 import SimpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 
 
 
 const galleryLightBox = new SimpleLightbox(`.gallery a`);
-const pixabayApi = new pixabayApi();
+const pixabayApi = new PixabayApi();
 
 const perPage = pixabayApi.perPage;
 
