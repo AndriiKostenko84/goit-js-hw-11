@@ -2,7 +2,7 @@ import axios from "axios";
 
 export class PixabayApi {
     #BASE_URL = `https://pixabay.com/api/`;
-    #API_KEY = `35096512-11f13dd84508435723f25f595 `;
+    #API_KEY = `35096512-11f13dd84508435723f25f595`;
     
     #BASE_SEARCH = {
         image_type: `photo`,
